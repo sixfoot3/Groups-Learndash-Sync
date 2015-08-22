@@ -29,197 +29,152 @@
 
 // Useful global constants
 define( 'SF3GLS_VERSION', '0.1.0' );
-define( 'SF3GLS_URL',     plugin_dir_url( __FILE__ ) );
-define( 'SF3GLS_PATH',    dirname( __FILE__ ) . '/' );
+define( 'SF3GLS_URL', plugin_dir_url( __FILE__ ) );
+define( 'SF3GLS_PATH', dirname( __FILE__ ) . '/' );
 
 //Lets Go!
-
-if (!class_exists("sf3_GroupsLearndashSync")) {
-    class sf3_GroupsLearndashSync {
-
-        public static $instance;
-        private $options;
-
-        const OPTIONS      = 'sf3_glsync';
-        const MENU_SLUG   = 'sf3-glsync';
-
-        public function sf3_GroupsLearndashSync() {
-            $this->__construct();
-        }
-
-        function __construct() {
-            self::$instance = $this;
-
-            add_action( 'init',         array( $this, 'init'        ) );
-            add_action( 'admin_init',   array( $this, 'admin_init'  ) );
-
-            add_action( 'admin_init',   array( $this, 'settings_page_init'  ) );
-            add_action( 'admin_menu',   array( $this, 'admin_menu'  ) );
-
-            add_filter( 'the_content',  array( $this, 'sf3gls_filter_content'      ) );
-
-        }
-
-        public function init() {
-
-        }
-
-        public function admin_init() {
-
-        }
-
-        public function admin_menu() {
-            $settings_page = add_menu_page( 'Groups Learndash Sync', 'Groups Learndash Sync', 'manage_options', self::MENU_SLUG, array( $this, 'render_settings_page' ), null, 3);
-
-            $settings_page_edit = add_submenu_page(self::MENU_SLUG, 'Settings', 'Settings', 'manage_options', self::MENU_SLUG, array( $this, 'render_settings_page' ));
-
-            $settings_child_page = add_submenu_page( self::MENU_SLUG, 'Child Settings Page', 'Child Settings Page', 'manage_options', 'child-settings-page', array( $this, 'render_test_page' ));
-
-
-            add_action( "load-{$settings_page}", array( $this, 'enqueue' ) );
-            add_action( "load-{$settings_child_page}", array( $this, 'enqueue' ) );
-
-        }
-
-        public function settings_page_init(){
-            register_setting('sf3_glsync', 'sf3_glsync', array($this,'validate_settings'));
-
-            add_settings_section(
-                $id         = 'settings_section_id',
-                $title      = __('Settings Section','sf3-glsync'),
-                $callback   = array($this,'settings_section_description'),
-                $page       = 'settings_area'
-            );
-
-            add_settings_field(
-                $id         = 'radio_id',
-                $title      = __('Radio Section','sf3-glsync'),
-                $callback   = array( $this, 'radio_input' ),
-                $page       = 'settings_area',
-                $section    = 'settings_section_id',
-                $args       = array(
-                    'name'        => 'settings_radio',
-                    'type'        => 'radio',
-                    'description' => 'Settings Radio',
-                    'options'     => array(
-                        'option_one'  => _('Option One'),
-                        'option_two'  => _('Option Two'),
-                    ),
-                    'settings_name' => 'sf3_glsync'
-
-                )
-            );
-
-            add_settings_field(
-                $id         = 'text_id',
-                $title      = __('Text Section','sf3-glsync'),
-                $callback   = array( $this, 'text_input' ),
-                $page       = 'settings_area',
-                $section    = 'settings_section_id',
-                $args       = array(
-                    'name'        => 'settings_text',
-                    'type'        => 'text',
-                    'description' => 'Settings Text',
-                    'options'     => array(
-                        'option_one'  => _(''),
-                    ),
-                    'settings_name' => 'sf3_glsync'
-
-                )
-            );
-
-        }
-
-        public function settings_section_description() {
-            _e('Settings Section description');
-        }
-
-        public function text_input( $args ){
-
-            $option = (array) get_option($args['settings_name']);
-
-            if ( empty( $args['name'] ) || ! is_array( $args['options'] ) )
-                return false;
-
-            $option_value = ( isset( $option[$args['name']] ) ) ? $option[$args['name']] : '';
-
-
-            echo '<label for="' . esc_attr( $args['name'] ) . '">';
-                foreach ( (array) $args['options'] as $value => $label ){
-                    echo '<input name="'.$args['settings_name'] .'['. esc_attr( $args['name'] ) . ']" type="' . esc_attr( $args['type'] ) . '" id="' . esc_attr( $args['name'] ) . '" value="'.esc_attr($option_value).'" > ' . $label;
-                }
-            echo '</label>';
-            if ( ! empty( $args['description'] ) )
-                echo ' <p class="description">' . $args['description'] . '</p>';
-
-        }
-
-        public function radio_input( $args ){
-
-            $option = (array) get_option($args['settings_name']);
-
-            if ( empty( $args['name'] ) || ! is_array( $args['options'] ) )
-                return false;
-
-            $option_value = ( isset( $option[$args['name']] ) ) ? $option[$args['name']] : '';
-
-            echo '<label for="' . esc_attr( $args['name'] ) . '">';
-                foreach ( (array) $args['options'] as $value => $label ){
-
-                    $checked = ( $option_value == $value ) ? 'checked' : '';
-
-                    echo '<input name="'.$args['settings_name'] .'['. esc_attr( $args['name'] ) . ']" type="' . esc_attr( $args['type'] ) . '" id="' . esc_attr( $args['name'] ) . '" value="'.esc_attr($value).'" '.$checked.'> ' . $label;
-                    echo '<br />';
-                }
-            echo '</label>';
-            if ( ! empty( $args['description'] ) )
-                echo ' <p class="description">' . $args['description'] . '</p>';
-
-        }
-
-        public function validate_settings($input){
-            return $input;
-        }
-
-        public function render_settings_page() {
-            include( dirname( __FILE__ ) . '/templates/settings-page.php' );
-        }
-
-        public function enqueue() {
-            wp_enqueue_style(   'settings-css', plugins_url( "css/plugin.css", __FILE__ ), array(), '' );
-
-            wp_enqueue_script(  'settings-js',  plugins_url( "js/src/plugin.js", __FILE__ ), array( 'jquery'), '' );
-            wp_localize_script( 'settings-js', 'ajax', array( 'url' => admin_url( 'admin-ajax.php' ) ) );
-
-            do_action( 'sf3gls_enqueue' );
-        }
-
-        public function sf3gls_filter_content( $content ) {
-
-            return $content;
-
-        }
-
-    } //end sf3_GroupsLearndashSync
-} //end if exists
-
-new sf3_GroupsLearndashSync;
-
-/**
- * Activate the plugin
- */
-function sf3gls_activate() {
-	// First load the init scripts in case any rewrite functionality is being loaded
-
-	flush_rewrite_rules();
+if ( file_exists( dirname( __FILE__ ) . '/cmb2/init.php' ) && ! function_exists( 'new_cmb2_box' ) ) {
+	require_once dirname( __FILE__ ) . '/cmb2/init.php';
 }
-register_activation_hook( __FILE__, 'sf3gls_activate' );
 
-/**
- * Deactivate the plugin
- * Uninstall routines should be in uninstall.php
- */
-function sf3gls_deactivate() {
+if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
+	class sf3_GroupsLearndashSync {
 
-}
-register_deactivation_hook( __FILE__, 'sf3gls_deactivate' );
+		public static $instance;
+		private $options;
+
+		const OPTIONS = 'sf3_glsync';
+		const MENU_SLUG = 'sf3-glsync';
+
+		function __construct() {
+			self::$instance = $this;
+
+			add_action( 'cmb2_init', array( $this, 'sf3gls_ld_groups_meta' ), 10 );
+			add_action( 'groups_created_user_group', array( $this, 'groups_created_user_group' ), 10, 2 );
+			add_action( 'groups_deleted_user_group', array( $this, 'groups_deleted_user_group' ), 10, 2 );
+
+		}
+
+		public function sf3_GroupsLearndashSync() {
+			$this->__construct();
+		}
+
+		function sf3gls_get_groups() {
+			if ( ! class_exists( 'Groups_Group' ) ) {
+				return false;
+			}
+
+			$result         = array();
+			$args['fields'] = 'group_id,name';
+			$groups         = Groups_Group::get_groups( $args );
+
+			if ( sizeof( $groups ) > 0 ) {
+				foreach ( $groups as $group ) {
+					$result[ $group->group_id ] = $group->name;
+				}
+			}
+
+			return $result;
+
+		}
+
+		function sf3gls_ld_groups_meta() {
+
+			$prefix = '_sf3gls_';
+
+			$groups = self::sf3gls_get_groups();
+
+			if ( function_exists( 'new_cmb2_box' ) && ! empty( $groups ) ) {
+				$sync_meta = new_cmb2_box( array(
+					'id'           => $prefix . 'sync_metabox',
+					'title'        => __( 'Sync With Groups', 'sf3gls' ),
+					'object_types' => array( 'groups', ),
+					'context'      => 'side',
+					'priority'     => 'high',
+				) );
+
+				$sync_meta->add_field( array(
+					'name'             => __( 'Choose Group to Sync', 'sf3gls' ),
+					'desc'             => __( 'When chosen, this group will sync with the Itthinx group.', 'sf3gls' ),
+					'id'               => $prefix . 'group_sync_id',
+					'type'             => 'select',
+					'show_option_none' => 'Select A Group',
+					'options'          => $groups
+				) );
+			}
+		}
+
+		function get_learndash_group_from_groups_plugin( $groups_plugin_group_id ) {
+			if ( ! class_exists( 'Groups_Group' ) ) {
+				return false;
+			}
+
+			$args  = array(
+				'meta_key'   => '_sf3gls_group_sync_id',
+				'meta_value' => $groups_plugin_group_id,
+				'post_type'  => 'groups',
+				'fields'     => 'ids'
+			);
+			$query = new WP_Query( $args );
+			if ( $query->have_posts() ) {
+				return $query->posts;
+			}
+
+			return false;
+		}
+
+		function groups_created_user_group( $user_id, $groups_plugin_group_id ) {
+
+			if ( ! class_exists( 'Groups_Group' ) ) {
+				return false;
+			}
+
+			$learndash_group_ids = $this->get_learndash_group_from_groups_plugin( $groups_plugin_group_id );
+
+			foreach ( $learndash_group_ids as $ld_id ) {
+
+				$learndash_group_users = array( $user_id );
+				$group_users           = learndash_get_groups_user_ids( $ld_id );
+
+				foreach ( $learndash_group_users as $ga ) {
+					if ( ! in_array( $ga, $group_users ) ) {
+						update_user_meta( $ga, "learndash_group_users_" . $ld_id, $ld_id );
+					}
+				}
+
+				$group_enrolled_courses = learndash_group_enrolled_courses( $ld_id );
+
+				if ( $group_enrolled_courses ) {
+					foreach ( $group_enrolled_courses as $course_id ) {
+						$meta = ld_update_course_access( $user_id, $course_id );
+					}
+				}
+
+			}
+		}
+
+		function groups_deleted_user_group( $user_id, $groups_plugin_group_id ) {
+
+			if ( ! class_exists( 'Groups_Group' ) ) {
+				return false;
+			}
+
+			$learndash_group_ids = $this->get_learndash_group_from_groups_plugin( $groups_plugin_group_id );
+
+			foreach ( $learndash_group_ids as $ld_id ) {
+				delete_user_meta( $user_id, "learndash_group_users_" . $ld_id, null );
+
+				$group_enrolled_courses = learndash_group_enrolled_courses( $ld_id );
+
+				if ( $group_enrolled_courses ) {
+					foreach ( $group_enrolled_courses as $course_id ) {
+						$meta = ld_update_course_access( $user_id, $course_id, $remove = true );
+					}
+				}
+			}
+		}
+
+	} //end class
+} //end if
+
+$GLOBALS['sf3_GroupsLearndashSync'] = new sf3_GroupsLearndashSync;
