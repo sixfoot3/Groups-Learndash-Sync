@@ -1,17 +1,18 @@
 === Groups Learndash Sync ===
-Contributors: 
-Donate link:       http://sixfoot3.com
-Tags: 
-Requires at least: 3.5.1
-Tested up to:      3.5.1
-Stable tag:        0.1.0
+Contributors:       TM3909, SixFoot3
+Donate link:
+Tags:               Groups, Learndash, group sync
+Requires at least: 4.0
+Tested up to:      4.3.1
+Stable tag:        1.0
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
-Sync Groups with Learndash Groups
+Sync Itthinx Groups with Learndash Groups
 
 == Description ==
 
+Offer access via Woocommerce or Gravity forms utilizing Itthinx Groups and Learndash using this sync system. This allows administrators to sync the user access from Itthinx Groups to Learndash.
 
 
 == Installation ==
@@ -23,16 +24,18 @@ Sync Groups with Learndash Groups
 
 == Frequently Asked Questions ==
 
+Q. Will this sync existing users?
+A. No, you will need to keep your existing users organized. This will only help for new users or if you enroll existing users.
 
 == Screenshots ==
 
 
 == Changelog ==
 
-= 0.1.0 =
+= 1.0 =
 * First release
 
 == Upgrade Notice ==
 
-= 0.1.0 =
+= 1.0 =
 First Release

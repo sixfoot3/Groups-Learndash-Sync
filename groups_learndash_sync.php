@@ -2,10 +2,10 @@
 /**
  * Plugin Name: Groups Learndash Sync
  * Plugin URI:  http://sixfoot3.com
- * Description: Sync Groups with Learndash Groups
- * Version:     0.1.0
+ * Description: Sync Itthinx Groups with Learndash Groups
+ * Version:     1.0
  * Author:      Tom Morton
- * Author URI:  http://sixfoot3.com
+ * Author URI:  https://sixfoot3.com
  * License:     GPLv2+
  */
 
@@ -37,11 +37,10 @@ if ( file_exists( dirname( __FILE__ ) . '/cmb2/init.php' ) && ! function_exists(
 	require_once dirname( __FILE__ ) . '/cmb2/init.php';
 }
 
-if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
-	class sf3_GroupsLearndashSync {
+if ( ! class_exists( "SF3_GLD_SYNC" ) ) {
+	class SF3_GLD_SYNC {
 
 		public static $instance;
-		private $options;
 
 		const OPTIONS = 'sf3_glsync';
 		const MENU_SLUG = 'sf3-glsync';
@@ -55,7 +54,7 @@ if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
 
 		}
 
-		public function sf3_GroupsLearndashSync() {
+		public function SF3_GLD_SYNC() {
 			$this->__construct();
 		}
 
@@ -109,12 +108,13 @@ if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
 				return false;
 			}
 
-			$args  = array(
+			$args = array(
 				'meta_key'   => '_sf3gls_group_sync_id',
 				'meta_value' => $groups_plugin_group_id,
 				'post_type'  => 'groups',
 				'fields'     => 'ids'
 			);
+
 			$query = new WP_Query( $args );
 			if ( $query->have_posts() ) {
 				return $query->posts;
@@ -124,8 +124,12 @@ if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
 		}
 
 		function groups_created_user_group( $user_id, $groups_plugin_group_id ) {
-
-			if ( ! class_exists( 'Groups_Group' ) ) {
+			if (
+				! class_exists( 'Groups_Group' ) ||
+				! function_exists( 'learndash_get_groups_user_ids' ) ||
+				! function_exists( 'learndash_group_enrolled_courses' ) ||
+				! function_exists( 'ld_update_course_access' )
+			) {
 				return false;
 			}
 
@@ -154,8 +158,11 @@ if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
 		}
 
 		function groups_deleted_user_group( $user_id, $groups_plugin_group_id ) {
-
-			if ( ! class_exists( 'Groups_Group' ) ) {
+			if (
+				! class_exists( 'Groups_Group' ) ||
+				! class_exists( 'learndash_group_enrolled_courses' ) ||
+				! class_exists( 'ld_update_course_access' ) ||
+			) {
 				return false;
 			}
 
@@ -177,4 +184,4 @@ if ( ! class_exists( "sf3_GroupsLearndashSync" ) ) {
 	} //end class
 } //end if
 
-$GLOBALS['sf3_GroupsLearndashSync'] = new sf3_GroupsLearndashSync;
+$GLOBALS['SF3_GLD_SYNC'] = new SF3_GLD_SYNC;
